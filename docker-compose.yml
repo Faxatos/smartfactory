@@ -204,7 +204,7 @@ services:
       - not-db-init
 
   db-init:
-    image: db-init
+    image: db-init-local
     build:
       context: ./database
       dockerfile: Dockerfile
