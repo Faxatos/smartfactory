@@ -22,8 +22,11 @@ def run_script(script_path, description):
         ], check=True, capture_output=True, text=True)
         print(f"Output:\n{result.stdout}")
     except subprocess.CalledProcessError as e:
-        print(f"Error during: {description}\n{e.stderr}")
-        exit(1)
+        if "Topic already exists" in e.stderr or "already exists" in e.stdout:
+            print(f"Info during {description}: Topic already exists.")
+        else:
+            print(f"Error during {description}\n{e.stderr}")
+            exit(1)
 
 def main():
     """
@@ -40,11 +43,16 @@ def main():
     minio_script = os.path.join("minio", "create_obj_storage.py")
     postgres_script = os.path.join("postgres", "create_db_tables.py")
     druid_script = os.path.join("druid", "upload_timeseries.py")
+    kafka_script = os.path.join("kafka", "initialize_topic.py")
+    druid_stream_script = os.path.join("druid", "ingest_timeseries.py")
+
 
     # Execute each script
     run_script(minio_script, "Creating Object Storage in Minio")
     run_script(postgres_script, "Creating Database Tables in PostgreSQL")
     run_script(druid_script, "Uploading Timeseries Data to Druid")
+    run_script(kafka_script, "Creating a topic for Kafka")
+    run_script(druid_stream_script, "Ingesting Timeseries stream Data to Druid")
 
 # Entry point
 if __name__ == "__main__":
