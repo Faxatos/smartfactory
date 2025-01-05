@@ -20,7 +20,7 @@ const Dashboard: React.FC = () => {
         const [timeFrame, setTimeFrame] = useState<TimeFrame>({
             from: new Date(2024, 9, 16),
             to: new Date(2024, 9, 19),
-            aggregation: 'day'
+            aggregation: 'minute'
         });
         const [isRollbackTime, setIsRollbackTime] = useState(false);
 

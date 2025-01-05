@@ -103,6 +103,7 @@ const TimeFrameSelector: React.FC<TimeFrameSelectorProps> = ({timeFrame, setTime
                         onChange={handleChange}
                         value={timeFrame ? timeFrame.key : ''}
                     >
+                        <option value="today">Today</option>
                         <option value="last3Days">Last 3 days</option>
                         <option value="thisWeek">This Week</option>
                         <option value="thisMonth">This Month</option>
