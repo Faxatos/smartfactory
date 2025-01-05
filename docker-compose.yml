@@ -234,6 +234,23 @@ services:
     profiles:
       - database
       - not-db-init
+  
+  latency-monitor:
+    image: latency-monitor
+    build:
+      context: ./latency-monitor
+      dockerfile: Dockerfile
+    container_name: latency-monitor
+    depends_on:
+      router:
+        condition: service_healthy
+    env_file:
+      - latency-monitor/.env 
+    volumes:
+      - ./latency-monitor:/app 
+    profiles:
+      - database
+      - not-db-init
       
   kb:
     build:
