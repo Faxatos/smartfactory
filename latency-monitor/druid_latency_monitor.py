@@ -1,21 +1,33 @@
 import requests
 import time
+from datetime import datetime
 import os
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
-def get_druid_latency(druid_query_endpoint, datasource):
+def parse_iso8601_with_ms(timestamp):
     """
-    Queries Druid to calculate end-to-end latency.
+    Parse ISO 8601 timestamps with millisecond precision.
+    """
+    try:
+        return datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
+    except ValueError:
+        return datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%SZ")
+
+def get_druid_latency(druid_query_endpoint, datasource, retries=3, retry_delay=5):
+    """
+    Queries Druid to calculate end-to-end latency with retry mechanism.
     
     Args:
         druid_query_endpoint (str): Druid broker/router endpoint.
         datasource (str): Druid datasource name.
+        retries (int): Number of retry attempts in case of failure.
+        retry_delay (int): Delay between retries in seconds.
 
     Returns:
-        float: Latency in seconds, or None if the query fails.
+        float: Latency in milliseconds, or None if the query ultimately fails.
     """
     query = {
         "query": f"""
@@ -23,24 +35,31 @@ def get_druid_latency(druid_query_endpoint, datasource):
         FROM "{datasource}"
         """
     }
-    try:
-        response = requests.post(f"{druid_query_endpoint}", json=query)
-        response.raise_for_status()
-        result = response.json()
-        
-        if result:
-            latest_timestamp = result[0]['latest_kafka_timestamp']
-            query_time = result[0]['query_time']
+    attempts = 0
+    while attempts <= retries:
+        try:
+            response = requests.post(f"{druid_query_endpoint}", json=query, timeout=10)
+            response.raise_for_status()
+            result = response.json()
             
-            # Convert timestamps to epoch times
-            latest_timestamp_epoch = time.mktime(time.strptime(latest_timestamp, "%Y-%m-%dT%H:%M:%S.%fZ"))
-            query_time_epoch = time.mktime(time.strptime(query_time, "%Y-%m-%dT%H:%M:%S.%fZ"))
-            
-            # Calculate latency in seconds
-            return query_time_epoch - latest_timestamp_epoch
-    except Exception as e:
-        print(f"Error querying Druid: {e}")
-    
+            if result:
+                latest_timestamp = result[0]['latest_kafka_timestamp']
+                query_time = result[0]['query_time']
+
+                # Parse timestamps
+                latest_time_obj = parse_iso8601_with_ms(latest_timestamp)
+                query_time_obj = parse_iso8601_with_ms(query_time)
+                
+                # Calculate latency in milliseconds
+                latency = (query_time_obj - latest_time_obj).total_seconds() * 1000
+                return latency
+        except Exception as e:
+            print(f"Attempt {attempts + 1}/{retries} failed: {e} (Broker still not ready)")
+            if attempts < retries:
+                print(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            attempts += 1
+
     return None
 
 def monitor_latency(druid_query_endpoint, datasource, time_error):
@@ -70,8 +89,9 @@ def monitor_latency(druid_query_endpoint, datasource, time_error):
             if previous_latency is None or latest_latency < previous_latency:
                 best_latency = latest_latency
             
-                print(f"Best Latency: {best_latency:.3f} seconds")
-        
+                print(f"Latency: {best_latency} ms", flush=True)
+            #print(f"Debug print: Best Latency = {best_latency} ms, latest_latency = {latest_latency} ms, previous_latency = {previous_latency} ms")
+
         # Wait for the specified time_error before the next check
         time.sleep(time_error / 1000)
 

@@ -61,7 +61,7 @@ def generate_logs(interval_seconds, kafka_topic, kafka_server):
             for kpi in kpis:
                 kpi_values = generate_kpi_values()
                 log_entry = {
-                    "time": current_time.isoformat(),
+                    "time": datetime.utcnow().isoformat(timespec='milliseconds') + 'Z',
                     "asset_id": asset_id,
                     "name": machine,
                     "kpi": kpi,
