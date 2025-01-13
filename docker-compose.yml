@@ -204,7 +204,7 @@ services:
       - not-db-init
 
   db-init:
-    image: db-init-local
+    image: ghcr.io/faxatos/smartfactory/db-init:latest
     build:
       context: ./database
       dockerfile: Dockerfile
@@ -219,7 +219,7 @@ services:
         condition: service_healthy
   
   log-generator:
-    image: log-generator 
+    image: ghcr.io/faxatos/smartfactory/data-generation:latest
     build:
       context: ./data-generation  
       dockerfile: Dockerfile
@@ -236,7 +236,7 @@ services:
       - not-db-init
   
   latency-monitor:
-    image: latency-monitor
+    image: ghcr.io/faxatos/smartfactory/latency-monitor:latest
     build:
       context: ./latency-monitor
       dockerfile: Dockerfile
