@@ -27,11 +27,13 @@ jobs:
             rag/**
             gui-panel/**
             kpi-engine/**
+            latency-monitor/**
+            data-generation/**
 
       - name: Parse changed services
         id: parse-changes
         run: |
-          services="database kb data-processing api rag gui-panel kpi-engine"
+          services="database kb data-processing api rag gui-panel kpi-engine latency-monitor data-generation"
           changed_services=""
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             # Se il trigger è workflow_dispatch, ricostruisci tutti i servizi
@@ -102,7 +104,7 @@ jobs:
       cancel-in-progress: false
     strategy:
       matrix:
-        service: [kb, data-processing, api, rag, gui-panel, kpi-engine]
+        service: [kb, data-processing, api, rag, gui-panel, kpi-engine, latency-monitor, data-generation]
 
     steps:
       - name: Checkout code
