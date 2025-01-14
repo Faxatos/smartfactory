@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [kb, data-processing, api, rag, gui-panel, kpi-engine]  # Lista completa dei servizi.
+        service: [kb, data-processing, api, rag, gui-panel, kpi-engine, latency-monitor, data-generation]  # Lista completa dei servizi.
 
     steps:
       - name: Checkout code
@@ -30,7 +30,7 @@ jobs:
         with:
           context: ./${{ matrix.service }}
           file: ./${{ matrix.service }}/Dockerfile
-          tags: ghcr.io/${{ github.repository_owner }}/smartfactory/${{ matrix.service }}:pr-${{ github.event.number }}
+          tags: ghcr.io/faxatos/smartfactory/${{ matrix.service }}:pr-${{ github.event.number }}
           push: false 
           load: true
           cache-from: type=gha
@@ -68,7 +68,7 @@ jobs:
           fi
           
           # Run the container in detached mode
-          docker run $ENV_OPTION --name test-${{ matrix.service }} -d ghcr.io/${{ github.repository_owner }}/smartfactory/${{ matrix.service }}:pr-${{ github.event.number }}
+          docker run $ENV_OPTION --name test-${{ matrix.service }} -d ghcr.io/faxatos/smartfactory/${{ matrix.service }}:pr-${{ github.event.number }}
           
           # Wait for 60 seconds to test stability
           sleep 60
